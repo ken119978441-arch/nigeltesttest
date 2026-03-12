@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>今日运气评测</title>
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: radial-gradient(circle at top, #111827 0, #020617 40%, #000000 100%);
+        color: rgba(249, 250, 251, 0.96);
+        font-family: -apple-system, BlinkMacSystemFont, system-ui, "SF Pro Text",
+          "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .app-root {
+        width: 100%;
+        height: 100%;
+        max-width: 430px;
+        padding: 24px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+      .muted {
+        color: rgba(248, 250, 252, 0.66);
+      }
+      .muted2 {
+        color: rgba(148, 163, 184, 0.9);
+      }
+      .glass-card {
+        background: rgba(15, 23, 42, 0.72);
+        border-radius: 22px;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        box-shadow: 0 18px 55px rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+      }
+      .aurora {
+        position: absolute;
+        inset: -56px;
+        background: linear-gradient(
+          135deg,
+          rgba(34, 197, 94, 0.2),
+          rgba(56, 189, 248, 0.22),
+          rgba(168, 85, 247, 0.22)
+        );
+        filter: blur(46px);
+        opacity: 0.9;
+        z-index: -1;
+      }
+      .orb {
+        position: relative;
+        width: 240px;
+        height: 240px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: box-shadow 0.4s ease, transform 0.4s ease, background-image 0.4s ease;
+      }
+      .orb-inner {
+        position: absolute;
+        inset: 12px;
+        border-radius: inherit;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+      }
+      .orb-top-glow {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.16),
+          transparent 48%,
+          rgba(0, 0, 0, 0.55)
+        );
+        opacity: 0.75;
+      }
+      .orb-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        user-select: none;
+      }
+      .orb-running {
+        animation: orb-running 0.85s ease-in-out infinite alternate;
+      }
+      @keyframes orb-running {
+        0% {
+          transform: scale(1) rotate(0deg);
+          box-shadow: 0 0 40px rgba(56, 189, 248, 0.65),
+            0 0 100px rgba(168, 85, 247, 0.65);
+        }
+        50% {
+          transform: scale(1.08) rotate(6deg);
+          box-shadow: 0 0 60px rgba(56, 189, 248, 0.85),
+            0 0 130px rgba(168, 85, 247, 0.88);
+        }
+        100% {
+          transform: scale(0.99) rotate(-4deg);
+          box-shadow: 0 0 50px rgba(56, 189, 248, 0.75),
+            0 0 120px rgba(168, 85, 247, 0.8);
+        }
+      }
+      .btn {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.55);
+        background: rgba(15, 23, 42, 0.9);
+        color: rgba(248, 250, 252, 0.96);
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        box-shadow: 0 0 26px rgba(99, 102, 241, 0.32);
+        cursor: pointer;
+        outline: none;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        transition: background 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
+      }
+      .btn:hover {
+        background: rgba(24, 35, 58, 0.96);
+      }
+      .btn:active {
+        transform: scale(0.98);
+      }
+      .btn[disabled] {
+        opacity: 0.6;
+        cursor: default;
+      }
+      .bottom-card {
+        height: 38%;
+        padding: 16px 16px 18px;
+        display: flex;
+        flex-direction: column;
+      }
+      .chart-shell {
+        flex: 1;
+        min-height: 0;
+      }
+      .chart-svg {
+        width: 100%;
+        height: 100%;
+      }
+      @media (max-width: 420px) {
+        .app-root {
+          padding: 18px 14px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app" class="app-root">
+      <div
+        class="top glass-card"
+        style="
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: space-between;
+          padding: 18px 16px 16px;
+        "
+      >
+        <div
+          style="
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          "
+        >
+          <div style="width: 100%; text-align: center; margin-bottom: 12px">
+            <div
+              style="
+                font-size: 20px;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+              "
+            >
+              今日运气评测
+            </div>
+            <div class="muted" style="font-size: 12px; margin-top: 8px">
+              高级暗箱 · 60 局模拟 · 2.5 秒量子推演
+            </div>
+          </div>
+
+          <div style="position: relative; margin: 8px 0 18px">
+            <div class="aurora"></div>
+            <div id="orb" class="orb">
+              <div class="orb-inner"></div>
+              <div class="orb-top-glow"></div>
+              <div class="orb-content">
+                <div
+                  style="
+                    font-size: 11px;
+                    letter-spacing: 0.12em;
+                    text-transform: uppercase;
+                    color: rgba(248, 250, 252, 0.76);
+                  "
+                >
+                  当前胜率
+                </div>
+                <div
+                  id="percent-text"
+                  style="
+                    font-size: 52px;
+                    font-weight: 800;
+                    letter-spacing: -0.03em;
+                    margin-top: 6px;
+                    text-shadow: 0 10px 40px rgba(255, 255, 255, 0.18);
+                  "
+                >
+                  72%
+                </div>
+                <div
+                  id="result-text"
+                  style="font-size: 16px; font-weight: 800; margin-top: 12px"
+                >
+                  运气还不错
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="width: 100%; text-align: center; margin-bottom: 6px">
+            <div
+              id="subtitle"
+              class="muted"
+              style="font-size: 12px; min-height: 18px"
+            >
+              准备好测试今天的运气了吗？
+            </div>
+          </div>
+        </div>
+
+        <div style="width: 100%; margin-top: 6px">
+          <button id="start-btn" class="btn">
+            <span id="btn-label">开始测试</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="bottom-card glass-card bottom-card">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+          "
+        >
+          <div class="muted" style="font-size: 12px">近30天运气趋势</div>
+          <div class="muted2" style="font-size: 12px">
+            平均 <span id="avg-text">72</span>%
+          </div>
+        </div>
+        <div class="chart-shell">
+          <svg
+            id="chart-svg"
+            class="chart-svg"
+            viewBox="0 0 320 120"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id="area-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="0%"
+                  stop-color="rgba(168,85,247,0.45)"
+                ></stop>
+                <stop
+                  offset="35%"
+                  stop-color="rgba(56,189,248,0.30)"
+                ></stop>
+                <stop offset="100%" stop-color="rgba(0,0,0,0)"></stop>
+              </linearGradient>
+              <filter id="line-glow">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" />
+              </filter>
+            </defs>
+            <path id="area-path" d="" fill="url(#area-grad)"></path>
+            <path
+              id="line-path"
+              d=""
+              fill="none"
+              stroke="rgba(168,85,247,0.98)"
+              stroke-width="2"
+            ></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ------- 工具函数 -------
+      function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function decideOutcome() {
+        const r = Math.random();
+        let tier, wins;
+        if (r < 0.15) {
+          tier = "good";
+          wins = randomInt(49, 57); // 81%-95%
+        } else if (r < 0.95) {
+          tier = "notbad";
+          wins = randomInt(36, 48); // 60%-80%
+        } else {
+          tier = "average";
+          wins = randomInt(24, 30); // 40%-50%
+        }
+        return { tier, wins };
+      }
+
+      function getResultTextByTier(tier) {
+        if (tier === "good") return "好运爆棚";
+        if (tier === "notbad") return "运气还不错";
+        return "运气一般般";
+      }
+
+      function getSubtitleByTier(tier) {
+        if (tier === "good")
+          return "今天适合大胆出击，所有小概率事件都可能站在你这边。";
+        if (tier === "notbad")
+          return "整体走势偏暖，稳中向好，顺势而为就好。";
+        return "暂时风平浪静，做好准备，静待翻盘时刻。";
+      }
+
+      function generateChartDataWithToday(todayValue) {
+        const arr = [];
+        for (let i = 0; i < 29; i++) {
+          arr.push({ value: randomInt(50, 75) });
+        }
+        arr.push({
+          value: todayValue != null ? todayValue : randomInt(55, 72),
+        });
+        return arr;
+      }
+
+      function generateBattleLogs(totalWins) {
+        const totalRoundsPerGame = 20;
+        const gameTypes = ["石头剪刀布", "扑克比大小", "扔骰子"];
+        const winsPerGame = [0, 0, 0];
+        let remainingWins = totalWins;
+        while (remainingWins > 0) {
+          const idx = randomInt(0, 2);
+          if (winsPerGame[idx] < totalRoundsPerGame) {
+            winsPerGame[idx]++;
+            remainingWins--;
+          }
+        }
+
+        const logs = [];
+        gameTypes.forEach((game, gi) => {
+          const targetWins = winsPerGame[gi];
+          const outcomes = new Array(totalRoundsPerGame).fill("pending");
+          let assignedWins = 0;
+          while (assignedWins < targetWins) {
+            const idx = randomInt(0, totalRoundsPerGame - 1);
+            if (outcomes[idx] !== "win") {
+              outcomes[idx] = "win";
+              assignedWins++;
+            }
+          }
+          for (let i = 0; i < totalRoundsPerGame; i++) {
+            if (outcomes[i] === "pending")
+              outcomes[i] = Math.random() < 0.75 ? "lose" : "draw";
+          }
+
+          for (let round = 0; round < totalRoundsPerGame; round++) {
+            const outcome = outcomes[round];
+            let detail = "";
+            if (game === "石头剪刀布") {
+              const mapping = ["石头", "布", "剪刀"];
+              const p = randomInt(0, 2);
+              let player, robot;
+              if (outcome === "win") {
+                player = p;
+                robot = (p + 2) % 3;
+              } else if (outcome === "lose") {
+                player = p;
+                robot = (p + 1) % 3;
+              } else {
+                player = p;
+                robot = p;
+              }
+              detail = "玩家出" + mapping[player] + "，系统出" + mapping[robot];
+            } else if (game === "扑克比大小") {
+              let player, robot;
+              if (outcome === "win") {
+                robot = randomInt(1, 12);
+                player = randomInt(robot + 1, 13);
+              } else if (outcome === "lose") {
+                player = randomInt(1, 12);
+                robot = randomInt(player + 1, 13);
+              } else {
+                player = randomInt(1, 13);
+                robot = player;
+              }
+              detail = "玩家" + player + " 点，系统 " + robot + " 点";
+            } else {
+              let player, robot;
+              if (outcome === "win") {
+                robot = randomInt(1, 5);
+                player = randomInt(robot + 1, 6);
+              } else if (outcome === "lose") {
+                player = randomInt(1, 5);
+                robot = randomInt(player + 1, 6);
+              } else {
+                player = randomInt(1, 6);
+                robot = player;
+              }
+              detail = "玩家掷出 " + player + " 点，系统掷出 " + robot + " 点";
+            }
+            const label =
+              outcome === "win" ? "胜" : outcome === "lose" ? "负" : "平";
+            logs.push({ summary: game + " " + label + "｜" + detail });
+          }
+        });
+        return logs.slice(0, 60);
+      }
+
+      function catmullRomToBezier(points) {
+        if (!points || points.length < 2) return "";
+        const d = [];
+        d.push("M " + points[0].x + " " + points[0].y);
+        for (let i = 0; i < points.length - 1; i++) {
+          const p0 = points[i - 1] || points[i];
+          const p1 = points[i];
+          const p2 = points[i + 1];
+          const p3 = points[i + 2] || p2;
+          const c1x = p1.x + (p2.x - p0.x) / 6;
+          const c1y = p1.y + (p2.y - p0.y) / 6;
+          const c2x = p2.x - (p3.x - p1.x) / 6;
+          const c2y = p2.y - (p3.y - p1.y) / 6;
+          d.push(
+            "C " +
+              c1x +
+              " " +
+              c1y +
+              ", " +
+              c2x +
+              " " +
+              c2y +
+              ", " +
+              p2.x +
+              " " +
+              p2.y
+          );
+        }
+        return d.join(" ");
+      }
+
+      function renderChart(data) {
+        const svg = document.getElementById("chart-svg");
+        const linePath = document.getElementById("line-path");
+        const areaPath = document.getElementById("area-path");
+        const width = 320;
+        const height = 120;
+        const padX = 6;
+        const padY = 8;
+        const minV = 0;
+        const maxV = 100;
+        const n = data.length;
+        const pts = data.map((d, i) => {
+          const x = padX + (i * (width - padX * 2)) / (n - 1);
+          const y =
+            padY +
+            (1 - (d.value - minV) / (maxV - minV || 1)) *
+              (height - padY * 2);
+          return { x, y };
+        });
+        const path = catmullRomToBezier(pts);
+        linePath.setAttribute("d", path);
+        const first = pts[0];
+        const last = pts[pts.length - 1];
+        const areaD =
+          path +
+          " L " +
+          last.x +
+          " " +
+          (height - padY) +
+          " L " +
+          first.x +
+          " " +
+          (height - padY) +
+          " Z";
+        areaPath.setAttribute("d", areaD);
+
+        // simple "from left" reveal by clipping width
+        svg.style.transition = "clip-path 0.5s ease-out, opacity 0.5s ease-out";
+        svg.style.opacity = "1";
+        svg.style.clipPath = "inset(0 0 0 0)";
+      }
+
+      (function init() {
+        const orb = document.getElementById("orb");
+        const percentText = document.getElementById("percent-text");
+        const resultText = document.getElementById("result-text");
+        const subtitleEl = document.getElementById("subtitle");
+        const btn = document.getElementById("start-btn");
+        const btnLabel = document.getElementById("btn-label");
+        const avgText = document.getElementById("avg-text");
+
+        let status = "idle"; // idle | running | done
+        let tier = "notbad";
+        let finalPercent = 72;
+        let chartData = generateChartDataWithToday(72);
+        let logs = [];
+        let logIndex = 0;
+        let percentTimer = null;
+        let logTimer = null;
+        let mainTimer = null;
+
+        function setOrbGradient() {
+          let gradient;
+          if (tier === "good") {
+            gradient =
+              "radial-gradient(circle at 30% 10%, rgba(56,189,248,1), rgba(99,102,241,0.96) 45%, rgba(168,85,247,0.92) 80%, rgba(2,6,23,0.7) 100%)";
+          } else if (tier === "average") {
+            gradient =
+              "radial-gradient(circle at 30% 10%, rgba(148,163,184,0.86), rgba(75,85,99,0.9) 55%, rgba(17,24,39,0.9) 85%, rgba(0,0,0,0.96) 100%)";
+          } else {
+            gradient =
+              "radial-gradient(circle at 30% 10%, rgba(34,197,94,0.96), rgba(14,165,233,0.92) 55%, rgba(99,102,241,0.8) 85%, rgba(2,6,23,0.7) 100%)";
+          }
+          orb.style.backgroundImage = gradient;
+        }
+
+        function updateAverage() {
+          const sum = chartData.reduce((acc, d) => acc + d.value, 0);
+          avgText.textContent = Math.round(sum / chartData.length);
+        }
+
+        function renderAll() {
+          percentText.textContent = finalPercent + "%";
+          resultText.textContent = getResultTextByTier(tier);
+          subtitleEl.textContent = getSubtitleByTier(tier);
+          setOrbGradient();
+          updateAverage();
+          renderChart(chartData);
+        }
+
+        // 初始渲染
+        renderAll();
+
+        function startTest() {
+          if (status === "running") return;
+          status = "running";
+          btn.disabled = true;
+          btnLabel.textContent = "测试中…";
+          orb.classList.add("orb-running");
+
+          // 重新生成结果
+          const outcome = decideOutcome();
+          tier = outcome.tier;
+          const wins = outcome.wins;
+          logs = generateBattleLogs(wins);
+          finalPercent = Math.round((wins / 60) * 100);
+          let displayPercent = 0;
+          logIndex = 0;
+          chartData = generateChartDataWithToday(null);
+
+          percentText.textContent = "0%";
+          resultText.textContent = "正在推演…";
+          subtitleEl.textContent = "量子算子加载中，局部世界线正在为你偏移。";
+          setOrbGradient();
+          updateAverage();
+          renderChart(chartData);
+
+          if (percentTimer) clearInterval(percentTimer);
+          if (logTimer) clearInterval(logTimer);
+          if (mainTimer) clearTimeout(mainTimer);
+
+          percentTimer = setInterval(function () {
+            displayPercent += randomInt(6, 16);
+            if (displayPercent > 100) {
+              displayPercent = randomInt(40, 95);
+            }
+            percentText.textContent = displayPercent + "%";
+          }, 80);
+
+          logTimer = setInterval(function () {
+            if (!logs.length) return;
+            logIndex = (logIndex + 1) % logs.length;
+            subtitleEl.textContent = logs[logIndex].summary;
+          }, 70);
+
+          mainTimer = setTimeout(function () {
+            clearInterval(percentTimer);
+            clearInterval(logTimer);
+
+            status = "done";
+            btn.disabled = false;
+            btnLabel.textContent = "再测一次";
+            orb.classList.remove("orb-running");
+
+            percentText.textContent = finalPercent + "%";
+            resultText.textContent = getResultTextByTier(tier);
+            subtitleEl.textContent = getSubtitleByTier(tier);
+
+            // 更新图表最后一天为今日胜率
+            chartData[chartData.length - 1].value = finalPercent;
+            updateAverage();
+            renderChart(chartData);
+            setOrbGradient();
+          }, 2500);
+        }
+
+        btn.addEventListener("click", startTest);
+      })();
+    </script>
+  </body>
+</html>
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>今日运气评测</title>
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+
+    <!-- Tailwind (optional, UI still works without it) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // Guard: Tailwind CDN might be blocked
+      (typeof tailwind !== "undefined") &&
+        (tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: [
+                "system-ui",
+                "-apple-system",
+                "BlinkMacSystemFont",
+                "SF Pro Text",
+                "Inter",
+                "Roboto",
+                "PingFang SC",
+                "Microsoft YaHei",
+                "sans-serif",
+              ],
+            },
+          },
+        },
+      });
+    </script>
+
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: radial-gradient(circle at top, #111827 0, #020617 40%, #000000 100%);
+        color: rgba(255, 255, 255, 0.92);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          "Inter", "Roboto", "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+      #root {
+        height: 100%;
+      }
+      .glass {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+      }
+      .aurora {
+        position: absolute;
+        inset: -56px;
+        background: linear-gradient(135deg, rgba(34,197,94,0.18), rgba(56,189,248,0.18), rgba(168,85,247,0.18));
+        filter: blur(46px);
+        opacity: 0.9;
+        z-index: -1;
+      }
+      .btn {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(255,255,255,0.06);
+        color: rgba(255,255,255,0.92);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        box-shadow: 0 0 26px rgba(99, 102, 241, 0.18);
+        font-weight: 600;
+        letter-spacing: 0.08em;
+      }
+      .btn:active {
+        transform: scale(0.99);
+      }
+      .muted {
+        color: rgba(255,255,255,0.62);
+      }
+      .muted2 {
+        color: rgba(255,255,255,0.42);
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Absolute fallback banner: should ALWAYS be visible -->
+    <div
+      id="fallback-banner"
+      style="
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        top: 12px;
+        z-index: 9999;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 12px;
+        line-height: 1.4;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      "
+    >
+      如果你只能看到背景，说明页面脚本被拦截/未执行。请打开开发者工具 Console 查看报错（最常见是网络无法访问 `esm.sh` / `cdn.tailwindcss.com`）。
+    </div>
+
+    <div id="root">
+      <div style="height:100%;display:flex;align-items:center;justify-content:center;padding:16px;">
+        <div class="glass" style="max-width:420px;width:100%;border-radius:20px;padding:16px;line-height:1.6;">
+          <div style="font-weight:700;font-size:16px;margin-bottom:6px;">正在加载应用…</div>
+          <div class="muted" style="font-size:12px;">
+            如果一直停留在这里，说明外部 CDN 资源可能被网络拦截。稍后我会在页面上提示具体缺失项。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      const rootEl = document.getElementById("root");
+      const fb = document.getElementById("fallback-banner");
+      if (fb) fb.remove();
+
+      function showFatal(title, detail) {
+        rootEl.innerHTML = `
+          <div style="height:100%;display:flex;align-items:center;justify-content:center;padding:16px;">
+            <div class="glass" style="max-width:460px;width:100%;border-radius:22px;padding:16px;">
+              <div style="font-weight:700;font-size:16px;margin-bottom:8px;">${title}</div>
+              <div class="muted" style="font-size:12px;white-space:pre-wrap;line-height:1.6;">${detail}</div>
+              <div class="muted2" style="font-size:12px;margin-top:10px;">建议：确保能访问 unpkg/esm.sh；或把文件放到本地服务器（如 VSCode Live Server）打开。</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Load dependencies via ESM (no Babel needed)
+      let React, ReactDOMClient, Motion, htm;
+      try {
+        [React, ReactDOMClient, Motion, htm] = await Promise.all([
+          import("https://esm.sh/react@18.3.1"),
+          import("https://esm.sh/react-dom@18.3.1/client"),
+          import("https://esm.sh/framer-motion@12.23.12"),
+          import("https://esm.sh/htm@3.1.1"),
+        ]);
+      } catch (e) {
+        showFatal(
+          "资源加载失败（CDN 被拦截或离线）",
+          `错误信息：${(e && (e.message || e.toString())) || "unknown"}\n\n你现在看到“只有背景”的根因通常就是这里。\n解决：确保网络可访问 https://esm.sh 和 https://cdn.tailwindcss.com，再刷新。`
+        );
+        throw e;
+      }
+
+      const { useEffect, useMemo, useRef, useState } = React;
+      const { motion, AnimatePresence } = Motion;
+      const html = htm.default.bind(React.createElement);
+
+      function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function decideOutcome() {
+        const r = Math.random();
+        let tier, wins;
+        if (r < 0.15) {
+          tier = "good";
+          wins = randomInt(49, 57); // 81%-95%
+        } else if (r < 0.95) {
+          tier = "notbad";
+          wins = randomInt(36, 48); // 60%-80%
+        } else {
+          tier = "average";
+          wins = randomInt(24, 30); // 40%-50%
+        }
+        return { tier, wins };
+      }
+
+      function getResultTextByTier(tier) {
+        if (tier === "good") return "好运爆棚";
+        if (tier === "notbad") return "好运还不错";
+        return "好运一般般";
+      }
+
+      function getSubtitle(tier) {
+        if (tier === "good") return "今天适合大胆出击，所有小概率事件都可能站在你这边。";
+        if (tier === "notbad") return "整体走势偏暖，稳中向好，顺势而为就好。";
+        return "暂时风平浪静，做好准备，静待翻盘时刻。";
+      }
+
+      function generateChartDataWithToday(todayValue = null) {
+        const data = [];
+        for (let i = 0; i < 29; i++) {
+          data.push({ label: i, value: randomInt(50, 75) });
+        }
+        data.push({ label: 29, value: todayValue ?? randomInt(55, 72) });
+        return data;
+      }
+
+      // Smooth SVG area curve (simple Catmull-Rom -> Bezier)
+      function catmullRomToBezier(points) {
+        if (points.length < 2) return "";
+        const d = [];
+        d.push(`M ${points[0].x} ${points[0].y}`);
+        for (let i = 0; i < points.length - 1; i++) {
+          const p0 = points[i - 1] || points[i];
+          const p1 = points[i];
+          const p2 = points[i + 1];
+          const p3 = points[i + 2] || p2;
+          const c1x = p1.x + (p2.x - p0.x) / 6;
+          const c1y = p1.y + (p2.y - p0.y) / 6;
+          const c2x = p2.x - (p3.x - p1.x) / 6;
+          const c2y = p2.y - (p3.y - p1.y) / 6;
+          d.push(`C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`);
+        }
+        return d.join(" ");
+      }
+
+      function AreaSparkline({ data, stroke = "rgba(168,85,247,0.95)" }) {
+        const width = 320;
+        const height = 120;
+        const padX = 6;
+        const padY = 8;
+
+        const pts = useMemo(() => {
+          const minV = 0;
+          const maxV = 100;
+          const n = data.length;
+          return data.map((d, i) => {
+            const x = padX + (i * (width - padX * 2)) / (n - 1);
+            const y =
+              padY + (1 - (d.value - minV) / (maxV - minV)) * (height - padY * 2);
+            return { x, y };
+          });
+        }, [data]);
+
+        const path = useMemo(() => catmullRomToBezier(pts), [pts]);
+        const area = useMemo(() => {
+          if (!path) return "";
+          const last = pts[pts.length - 1];
+          const first = pts[0];
+          return `${path} L ${last.x} ${height - padY} L ${first.x} ${height - padY} Z`;
+        }, [path, pts]);
+
+        return html`
+          <svg
+            viewBox=${`0 0 ${width} ${height}`}
+            width="100%"
+            height="100%"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(168,85,247,0.45)"></stop>
+                <stop offset="35%" stop-color="rgba(56,189,248,0.30)"></stop>
+                <stop offset="100%" stop-color="rgba(0,0,0,0)"></stop>
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="2.2" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            <path d=${area} fill="url(#g)" />
+            <path d=${path} fill="none" stroke=${stroke} stroke-width="2" filter="url(#glow)" />
+          </svg>
+        `;
+      }
+
+      function generateBattleLogs(totalWins) {
+        const totalRoundsPerGame = 20;
+        const gameTypes = ["石头剪刀布", "扑克比大小", "扔骰子"];
+
+        // allocate wins into 3 buckets (<=20 each)
+        const winsPerGame = [0, 0, 0];
+        let remainingWins = totalWins;
+        while (remainingWins > 0) {
+          const idx = randomInt(0, 2);
+          if (winsPerGame[idx] < totalRoundsPerGame) {
+            winsPerGame[idx]++;
+            remainingWins--;
+          }
+        }
+
+        const logs = [];
+        gameTypes.forEach((game, gameIndex) => {
+          const targetWins = winsPerGame[gameIndex];
+          const outcomes = new Array(totalRoundsPerGame).fill("pending");
+          let assignedWins = 0;
+          while (assignedWins < targetWins) {
+            const idx = randomInt(0, totalRoundsPerGame - 1);
+            if (outcomes[idx] !== "win") {
+              outcomes[idx] = "win";
+              assignedWins++;
+            }
+          }
+          for (let i = 0; i < totalRoundsPerGame; i++) {
+            if (outcomes[i] === "pending") outcomes[i] = Math.random() < 0.75 ? "lose" : "draw";
+          }
+
+          for (let round = 0; round < totalRoundsPerGame; round++) {
+            const outcome = outcomes[round];
+            let detail = "";
+            if (game === "石头剪刀布") {
+              const mapping = ["石头", "布", "剪刀"];
+              const p = randomInt(0, 2);
+              let player, robot;
+              if (outcome === "win") { player = p; robot = (p + 2) % 3; }
+              else if (outcome === "lose") { player = p; robot = (p + 1) % 3; }
+              else { player = p; robot = p; }
+              detail = `玩家出${mapping[player]}，系统出${mapping[robot]}`;
+            } else if (game === "扑克比大小") {
+              let player, robot;
+              if (outcome === "win") { robot = randomInt(1, 12); player = randomInt(robot + 1, 13); }
+              else if (outcome === "lose") { player = randomInt(1, 12); robot = randomInt(player + 1, 13); }
+              else { player = randomInt(1, 13); robot = player; }
+              detail = `玩家${player} 点，系统 ${robot} 点`;
+            } else {
+              let player, robot;
+              if (outcome === "win") { robot = randomInt(1, 5); player = randomInt(robot + 1, 6); }
+              else if (outcome === "lose") { player = randomInt(1, 5); robot = randomInt(player + 1, 6); }
+              else { player = randomInt(1, 6); robot = player; }
+              detail = `玩家掷出 ${player} 点，系统掷出 ${robot} 点`;
+            }
+            const label = outcome === "win" ? "胜" : outcome === "lose" ? "负" : "平";
+            logs.push({ summary: `${game} ${label}｜${detail}` });
+          }
+        });
+        return logs.slice(0, 60);
+      }
+
+      function App() {
+        const [status, setStatus] = useState("idle"); // idle | running | done
+        const [tier, setTier] = useState("notbad");
+        const [finalPercent, setFinalPercent] = useState(72);
+        const [displayPercent, setDisplayPercent] = useState(72);
+        const [logs, setLogs] = useState([]);
+        const [logIndex, setLogIndex] = useState(0);
+        const [chartData, setChartData] = useState(() => generateChartDataWithToday(72));
+        const [chartKey, setChartKey] = useState(0);
+
+        const percentTimerRef = useRef(null);
+        const logTimerRef = useRef(null);
+        const mainTimerRef = useRef(null);
+
+        useEffect(() => {
+          return () => {
+            clearInterval(percentTimerRef.current);
+            clearInterval(logTimerRef.current);
+            clearTimeout(mainTimerRef.current);
+          };
+        }, []);
+
+        const orbVariants = useMemo(() => ({
+          idle: {
+            scale: 1,
+            boxShadow: "0 0 40px rgba(56,189,248,0.35), 0 0 90px rgba(168,85,247,0.35)",
+            filter: "blur(0px)"
+          },
+          running: {
+            scale: [1, 1.08, 0.98, 1.09, 1],
+            rotate: [0, 10, -10, 8, 0],
+            boxShadow: [
+              "0 0 50px rgba(56,189,248,0.65), 0 0 120px rgba(168,85,247,0.75)",
+              "0 0 70px rgba(56,189,248,0.85), 0 0 150px rgba(168,85,247,0.95)"
+            ],
+            filter: ["blur(1px)", "blur(3px)", "blur(2px)"],
+            transition: { duration: 0.8, repeat: Infinity, repeatType: "mirror" }
+          },
+          good: {
+            scale: 1.12,
+            boxShadow: "0 0 75px rgba(56,189,248,0.95), 0 0 160px rgba(168,85,247,1)",
+            filter: "blur(1px)"
+          },
+          notbad: {
+            scale: 1.05,
+            boxShadow: "0 0 60px rgba(34,197,94,0.85), 0 0 130px rgba(56,189,248,0.75)",
+            filter: "blur(1px)"
+          },
+          average: {
+            scale: 0.98,
+            boxShadow: "0 0 38px rgba(148,163,184,0.6), 0 0 80px rgba(55,65,81,0.85)",
+            filter: "blur(1px)"
+          }
+        }), []);
+
+        const orbState = status === "running" ? "running" : tier;
+
+        const orbGradient = useMemo(() => {
+          if (tier === "good") {
+            return "radial-gradient(circle at 30% 10%, rgba(56,189,248,1), rgba(99,102,241,0.95) 45%, rgba(168,85,247,0.9) 80%, rgba(2,6,23,0.6) 100%)";
+          }
+          if (tier === "average") {
+            return "radial-gradient(circle at 30% 10%, rgba(148,163,184,0.82), rgba(75,85,99,0.88) 55%, rgba(17,24,39,0.86) 85%, rgba(0,0,0,0.92) 100%)";
+          }
+          return "radial-gradient(circle at 30% 10%, rgba(34,197,94,0.95), rgba(14,165,233,0.9) 55%, rgba(99,102,241,0.75) 85%, rgba(2,6,23,0.6) 100%)";
+        }, [tier]);
+
+        const currentLog = logs.length ? logs[logIndex]?.summary : "";
+        const resultText = getResultTextByTier(tier);
+        const subtitle = getSubtitle(tier);
+
+        const onStart = () => {
+          if (status === "running") return;
+
+          clearInterval(percentTimerRef.current);
+          clearInterval(logTimerRef.current);
+          clearTimeout(mainTimerRef.current);
+
+          const { tier: decidedTier, wins } = decideOutcome();
+          const logs = generateBattleLogs(wins);
+          const final = Math.round((wins / 60) * 100);
+
+          setTier(decidedTier);
+          setLogs(logs);
+          setFinalPercent(final);
+          setDisplayPercent(0);
+          setLogIndex(0);
+          setStatus("running");
+          setChartData(generateChartDataWithToday(null));
+          setChartKey((k) => k + 1);
+
+          percentTimerRef.current = setInterval(() => {
+            setDisplayPercent((prev) => {
+              const next = prev + randomInt(6, 16);
+              return next > 100 ? randomInt(40, 95) : next;
+            });
+          }, 80);
+
+          logTimerRef.current = setInterval(() => {
+            setLogIndex((i) => (i + 1) % logs.length);
+          }, 70);
+
+          mainTimerRef.current = setTimeout(() => {
+            clearInterval(percentTimerRef.current);
+            clearInterval(logTimerRef.current);
+            setDisplayPercent(final);
+            setStatus("done");
+            setChartData((prev) => {
+              const next = prev.slice();
+              next[next.length - 1] = { ...next[next.length - 1], value: final };
+              return next;
+            });
+          }, 2500);
+        };
+
+        const avg = useMemo(() => {
+          const s = chartData.reduce((acc, d) => acc + d.value, 0);
+          return Math.round(s / chartData.length);
+        }, [chartData]);
+
+        return html`
+          <div style="height:100%;display:flex;align-items:center;justify-content:center;">
+            <div style="width:100%;height:100%;max-width:420px;padding:24px 20px;display:flex;flex-direction:column;gap:22px;">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between;">
+                <div style="width:100%;display:flex;flex-direction:column;align-items:center;">
+                  <div style="width:100%;text-align:center;margin-bottom:12px;">
+                    <div style="font-size:20px;font-weight:700;letter-spacing:-0.02em;">今日运气评测</div>
+                    <div class="muted" style="font-size:12px;margin-top:8px;">高级暗箱 · 60 局模拟 · 2.5 秒量子推演</div>
+                  </div>
+
+                  <div style="position:relative;margin-top:6px;margin-bottom:18px;">
+                    <div class="aurora"></div>
+                    <${motion.div}
+                      style=${{
+                        width: 240,
+                        height: 240,
+                        borderRadius: 999,
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundImage: orbGradient
+                      }}
+                      variants=${orbVariants}
+                      animate=${orbState}
+                      transition=${{ type: "spring", stiffness: 120, damping: 20 }}
+                    >
+                      <div style="position:absolute;inset:12px;border-radius:999px;background:rgba(0,0,0,0.18);" class="glass"></div>
+                      <div style="position:absolute;inset:0;border-radius:999px;background:linear-gradient(to bottom, rgba(255,255,255,0.10), transparent 45%, rgba(0,0,0,0.55));opacity:0.75;"></div>
+
+                      <div style="position:relative;z-index:2;text-align:center;user-select:none;">
+                        <div style="font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:0.12em;">当前胜率</div>
+                        <div style="font-size:52px;font-weight:800;letter-spacing:-0.03em;margin-top:6px;text-shadow:0 10px 40px rgba(255,255,255,0.16);">
+                          ${displayPercent}%
+                        </div>
+                        <div style="font-size:16px;font-weight:800;margin-top:12px;">
+                          ${status === "running" ? "正在推演…" : resultText}
+                        </div>
+                      </div>
+                    </${motion.div}>
+                  </div>
+
+                  <div style="width:100%;text-align:center;margin-bottom:6px;">
+                    <div class="muted" style="font-size:12px;min-height:18px;">
+                      ${status === "running"
+                        ? (currentLog || "正在生成对战记录…")
+                        : (status === "done" ? subtitle : "准备好测试今天的运气了吗？")}
+                    </div>
+                  </div>
+                </div>
+
+                <div style="width:100%;margin-top:6px;">
+                  <button class="btn" onClick=${onStart} disabled=${status === "running"} style=${status === "running" ? { opacity: 0.65 } : null}>
+                    ${status === "running" ? "测试中…" : (status === "done" ? "再测一次" : "开始测试")}
+                  </button>
+                </div>
+              </div>
+
+              <div class="glass" style="height:38%;border-radius:22px;padding:16px;display:flex;flex-direction:column;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                  <div class="muted" style="font-size:12px;">近30天运气趋势</div>
+                  <div class="muted2" style="font-size:12px;">平均 ${avg}%</div>
+                </div>
+
+                <div style="flex:1;min-height:0;">
+                  <${motion.div}
+                    key=${chartKey}
+                    initial=${{ opacity: 0, x: -20 }}
+                    animate=${{ opacity: 1, x: 0 }}
+                    transition=${{ duration: 0.35, ease: "easeOut" }}
+                    style=${{ width: "100%", height: "100%" }}
+                  >
+                    <${AreaSparkline} data=${chartData} />
+                  </${motion.div}>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      const root = ReactDOMClient.createRoot(rootEl);
+      root.render(html`<${App} />`);
+    </script>
+  </body>
+</html>
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>今日运气测试</title>
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: [
+                "system-ui",
+                "-apple-system",
+                "BlinkMacSystemFont",
+                "SF Pro Text",
+                "Inter",
+                "Roboto",
+                "PingFang SC",
+                "Microsoft YaHei",
+                "sans-serif",
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      body {
+        background: radial-gradient(circle at top, #111827 0, #020617 40%, #000000 100%);
+        color: #f9fafb;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          "Inter", "Roboto", "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+    </style>
+
+    <!-- React & ReactDOM -->
+    <script
+      src="https://unpkg.com/react@18/umd/react.development.js"
+      crossorigin
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+      crossorigin
+    ></script>
+
+    <!-- Framer Motion (UMD global: window.Motion) -->
+    <script src="https://unpkg.com/framer-motion@1.6.7/dist/framer-motion.js"></script>
+
+    <!-- Recharts UMD -->
+    <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+
+    <!-- Babel Standalone -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef } = React;
+      const { motion, AnimatePresence } = window.Motion || {};
+      const {
+        ResponsiveContainer,
+        AreaChart,
+        Area,
+        XAxis,
+        YAxis,
+        Tooltip,
+      } = Recharts;
+
+      // Avoid silent blank screens if a CDN fails
+      if (!React || !ReactDOM || !Recharts || !motion) {
+        const missing = [
+          !React ? "React" : null,
+          !ReactDOM ? "ReactDOM" : null,
+          !Recharts ? "Recharts" : null,
+          !motion ? "Framer Motion" : null,
+        ].filter(Boolean);
+        document.getElementById("root").innerHTML =
+          '<div style="padding:16px;color:#e5e7eb;font-family:system-ui;background:#000;min-height:100vh;">' +
+          '<div style="font-size:16px;font-weight:600;margin-bottom:8px;">资源加载失败</div>' +
+          '<div style="font-size:12px;opacity:.85;line-height:1.6;">请确认网络可访问 CDN。缺少：<b>' +
+          missing.join(", ") +
+          "</b><br/>建议用 Chrome 打开，并在开发者工具 Console 查看报错。</div>" +
+          "</div>";
+        throw new Error("CDN missing: " + missing.join(", "));
+      }
+
+      // 工具函数
+      function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      // 生成 30 天 Mock 数据（前 29 天 50%-75%，第 30 天由今日结果覆盖）
+      function generateChartDataWithToday(todayValue = null) {
+        const data = [];
+        for (let i = 0; i < 29; i++) {
+          const v = randomInt(50, 75);
+          data.push({
+            day: `D-${29 - i}`,
+            value: v,
+          });
+        }
+        data.push({
+          day: "今天",
+          value: todayValue ?? randomInt(55, 72),
+        });
+        return data;
+      }
+
+      // 按权重决定结果档位 & 胜局数
+      function decideOutcome() {
+        const r = Math.random();
+        let tier;
+        let wins;
+
+        if (r < 0.15) {
+          // 好运爆棚
+          tier = "good";
+          wins = randomInt(49, 57); // 81%-95%
+        } else if (r < 0.95) {
+          // 运气还不错
+          tier = "notbad";
+          wins = randomInt(36, 48); // 60%-80%
+        } else {
+          // 运气一般般
+          tier = "average";
+          wins = randomInt(24, 30); // 40%-50%
+        }
+
+        return { tier, wins };
+      }
+
+      // 生成 60 局详细对战日志（3 类游戏各 20 局）
+      function generateBattleLogs(totalWins) {
+        const totalRoundsPerGame = 20;
+        const gameTypes = ["石头剪刀布", "扑克比大小", "扔骰子"];
+
+        // 随机把 totalWins 分配到 3 个游戏类型，每种最多 20 胜
+        const winsPerGame = [0, 0, 0];
+        let remainingWins = totalWins;
+        while (remainingWins > 0) {
+          const idx = randomInt(0, 2);
+          if (winsPerGame[idx] < totalRoundsPerGame) {
+            winsPerGame[idx]++;
+            remainingWins--;
+          }
+        }
+
+        const logs = [];
+
+        // 针对每个游戏生成 20 局
+        gameTypes.forEach((game, gameIndex) => {
+          const targetWins = winsPerGame[gameIndex];
+
+          // 先标记哪几局是胜利
+          const outcomes = new Array(totalRoundsPerGame).fill("pending");
+          let assignedWins = 0;
+          while (assignedWins < targetWins) {
+            const idx = randomInt(0, totalRoundsPerGame - 1);
+            if (outcomes[idx] !== "win") {
+              outcomes[idx] = "win";
+              assignedWins++;
+            }
+          }
+          // 剩余的局随机分配为平局或失败（大部分失败，少量平）
+          for (let i = 0; i < totalRoundsPerGame; i++) {
+            if (outcomes[i] === "pending") {
+              const r = Math.random();
+              outcomes[i] = r < 0.75 ? "lose" : "draw";
+            }
+          }
+
+          // 根据 outcome 生成真实对战数据
+          for (let round = 0; round < totalRoundsPerGame; round++) {
+            const outcome = outcomes[round];
+            let detail = "";
+
+            if (game === "石头剪刀布") {
+              const mapping = ["石头", "布", "剪刀"]; // 0,1,2
+              let player, robot;
+
+              const p = randomInt(0, 2);
+
+              if (outcome === "win") {
+                // 玩家赢
+                player = p;
+                robot = (p + 2) % 3;
+              } else if (outcome === "lose") {
+                player = p;
+                robot = (p + 1) % 3;
+              } else {
+                player = p;
+                robot = p;
+              }
+
+              detail = `玩家出${mapping[player]}，系统出${mapping[robot]}`;
+            } else if (game === "扑克比大小") {
+              let player, robot;
+              if (outcome === "win") {
+                robot = randomInt(1, 12);
+                player = randomInt(robot + 1, 13);
+              } else if (outcome === "lose") {
+                player = randomInt(1, 12);
+                robot = randomInt(player + 1, 13);
+              } else {
+                player = randomInt(1, 13);
+                robot = player;
+              }
+              detail = `玩家${player} 点，系统 ${robot} 点`;
+            } else if (game === "扔骰子") {
+              let player, robot;
+              if (outcome === "win") {
+                robot = randomInt(1, 5);
+                player = randomInt(robot + 1, 6);
+              } else if (outcome === "lose") {
+                player = randomInt(1, 5);
+                robot = randomInt(player + 1, 6);
+              } else {
+                player = randomInt(1, 6);
+                robot = player;
+              }
+              detail = `玩家掷出 ${player} 点，系统掷出 ${robot} 点`;
+            }
+
+            const label =
+              outcome === "win"
+                ? "胜"
+                : outcome === "lose"
+                ? "负"
+                : "平";
+
+            logs.push({
+              game,
+              outcome,
+              detail,
+              summary: `${game} ${label}｜${detail}`,
+            });
+          }
+        });
+
+        // 保持 60 局
+        return logs.slice(0, 60);
+      }
+
+      function getResultTextByTier(tier) {
+        if (tier === "good") return "好运爆棚";
+        if (tier === "notbad") return "运气还不错";
+        return "运气一般般";
+      }
+
+      function App() {
+        const [status, setStatus] = useState("idle"); // idle | running | done
+        // Default visual state similar to your reference screenshot
+        const [tier, setTier] = useState("notbad"); // good | notbad | average
+        const [finalPercent, setFinalPercent] = useState(72);
+        const [displayPercent, setDisplayPercent] = useState(72);
+        const [logs, setLogs] = useState([]);
+        const [currentLogIndex, setCurrentLogIndex] = useState(0);
+        const [chartData, setChartData] = useState(() => generateChartDataWithToday(72));
+        const [chartKey, setChartKey] = useState(0);
+
+        const percentTimerRef = useRef(null);
+        const logTimerRef = useRef(null);
+        const mainTimerRef = useRef(null);
+
+        useEffect(() => {
+          return () => {
+            clearInterval(percentTimerRef.current);
+            clearInterval(logTimerRef.current);
+            clearTimeout(mainTimerRef.current);
+          };
+        }, []);
+
+        const handleStart = () => {
+          if (status === "running") return;
+
+          // 再次测试时，重置状态
+          clearInterval(percentTimerRef.current);
+          clearInterval(logTimerRef.current);
+          clearTimeout(mainTimerRef.current);
+
+          const { tier: decidedTier, wins } = decideOutcome();
+          const logs = generateBattleLogs(wins);
+          const final = Math.round((wins / 60) * 100);
+
+          setTier(decidedTier);
+          setLogs(logs);
+          setFinalPercent(final);
+          setDisplayPercent(0);
+          setCurrentLogIndex(0);
+          setStatus("running");
+          // Regenerate 30-day trend each run; last point will be set on finish
+          setChartData(generateChartDataWithToday(null));
+          setChartKey((k) => k + 1);
+
+          // 胜率数字快速滚动
+          percentTimerRef.current = setInterval(() => {
+            setDisplayPercent((prev) => {
+              const next = prev + randomInt(5, 15);
+              return next > 100 ? randomInt(40, 95) : next;
+            });
+          }, 80);
+
+          // 日志快速滚动
+          logTimerRef.current = setInterval(() => {
+            setCurrentLogIndex((prev) => (prev + 1) % logs.length);
+          }, 70);
+
+          // 2.5 秒后定格
+          mainTimerRef.current = setTimeout(() => {
+            clearInterval(percentTimerRef.current);
+            clearInterval(logTimerRef.current);
+
+            setDisplayPercent(final);
+            setStatus("done");
+
+            // 更新图表最后一天为今日胜率
+            setChartData((prev) => {
+              const next = [...prev];
+              next[next.length - 1] = {
+                ...next[next.length - 1],
+                value: final,
+              };
+              return next;
+            });
+          }, 2500);
+        };
+
+        // 球体动画配置
+        const orbVariants = {
+          idle: {
+            scale: 1,
+            boxShadow:
+              "0 0 40px rgba(59,130,246,0.35), 0 0 80px rgba(147,51,234,0.35)",
+            filter: "blur(0px)",
+          },
+          running: {
+            scale: [1, 1.1, 0.95, 1.08, 1],
+            rotate: [0, 10, -10, 8, 0],
+            boxShadow: [
+              "0 0 40px rgba(59,130,246,0.6), 0 0 90px rgba(147,51,234,0.7)",
+              "0 0 60px rgba(59,130,246,0.8), 0 0 120px rgba(147,51,234,0.9)",
+            ],
+            filter: ["blur(1px)", "blur(4px)", "blur(2px)"],
+            transition: {
+              duration: 0.8,
+              repeat: Infinity,
+              repeatType: "mirror",
+            },
+          },
+          good: {
+            scale: 1.15,
+            boxShadow:
+              "0 0 70px rgba(59,130,246,0.9), 0 0 140px rgba(168,85,247,1)",
+            filter: "blur(1px)",
+          },
+          notbad: {
+            scale: 1.07,
+            boxShadow:
+              "0 0 55px rgba(34,197,94,0.8), 0 0 110px rgba(59,130,246,0.7)",
+            filter: "blur(1px)",
+          },
+          average: {
+            scale: 0.97,
+            boxShadow:
+              "0 0 35px rgba(148,163,184,0.6), 0 0 70px rgba(55,65,81,0.8)",
+            filter: "blur(1px)",
+          },
+        };
+
+        let orbGradient =
+          "radial-gradient(circle at 30% 10%, rgba(34,197,94,0.95), rgba(14,165,233,0.9) 55%, rgba(99,102,241,0.75) 85%, rgba(2,6,23,0.6) 100%)";
+        if (tier === "good") {
+          orbGradient =
+            "radial-gradient(circle at 30% 10%, rgba(56,189,248,1), rgba(99,102,241,0.95) 45%, rgba(168,85,247,0.9) 80%, rgba(2,6,23,0.6) 100%)";
+        } else if (tier === "notbad") {
+          orbGradient =
+            "radial-gradient(circle at 30% 10%, rgba(34,197,94,0.95), rgba(14,165,233,0.9) 55%, rgba(99,102,241,0.75) 85%, rgba(2,6,23,0.6) 100%)";
+        } else if (tier === "average") {
+          orbGradient =
+            "radial-gradient(circle at 30% 10%, rgba(148,163,184,0.8), rgba(75,85,99,0.85) 55%, rgba(17,24,39,0.8) 85%, rgba(0,0,0,0.9) 100%)";
+        }
+
+        const orbState =
+          status === "running" ? "running" : tier ? tier : "idle";
+
+        const resultText = getResultTextByTier(tier);
+        const resultSubtitle =
+          tier === "good"
+            ? "今天适合大胆出击，所有小概率事件都可能站在你这边。"
+            : tier === "notbad"
+            ? "整体走势偏暖，稳中向好，顺势而为就好。"
+            : tier === "average"
+            ? "暂时风平浪静，做好准备，静待翻盘时刻。"
+            : "";
+
+        const currentLog =
+          logs.length > 0 ? logs[currentLogIndex]?.summary : "";
+
+        return (
+          <div className="h-screen w-screen flex items-center justify-center">
+            <div className="w-full h-full max-w-md mx-auto px-5 py-6 flex flex-col gap-6">
+              {/* 上半部分：测试区 */}
+              <div className="flex-1 flex flex-col items-center justify-between">
+                <div className="w-full flex flex-col items-center">
+                  {/* 顶部标题（贴近参考） */}
+                  <div className="w-full text-center mb-4">
+                    <div className="text-xl font-semibold text-slate-50 tracking-tight">
+                      今日运气评测
+                    </div>
+                    <div className="text-xs text-slate-400/80 mt-2">
+                      高级暗箱 · 60 局模拟 · 2.5 秒量子推演
+                    </div>
+                  </div>
+
+                  {/* 发光球体 */}
+                  <div className="relative mt-2 mb-5">
+                    <motion.div
+                      className="w-60 h-60 rounded-full relative flex items-center justify-center"
+                      style={{
+                        backgroundImage: orbGradient,
+                      }}
+                      variants={orbVariants}
+                      animate={orbState}
+                      transition={{ type: "spring", stiffness: 120, damping: 20 }}
+                    >
+                      {/* 玻璃内层 */}
+                      <div className="absolute inset-3 rounded-full bg-black/20 backdrop-blur-2xl border border-white/10" />
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/10 via-transparent to-black/60 mix-blend-screen opacity-70" />
+
+                      {/* 中央文案（球内显示） */}
+                      <div className="relative z-10 text-center select-none">
+                        <div className="text-[11px] text-white/70 tracking-wide">
+                          当前胜率
+                        </div>
+                        <div className="text-5xl font-semibold tracking-tight text-white mt-1 drop-shadow-[0_10px_40px_rgba(255,255,255,0.18)]">
+                          {displayPercent}%
+                        </div>
+                        <div className="text-base font-semibold text-white mt-3">
+                          {status === "running" ? "正在推演…" : resultText}
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* 背景极光 */}
+                    <div className="absolute -inset-12 bg-gradient-to-tr from-cyan-500/25 via-purple-500/25 to-blue-500/25 blur-3xl opacity-70 -z-10" />
+                  </div>
+
+                  {/* 球下方提示（参考：一句话） */}
+                  <div className="w-full text-center mb-2">
+                    <div className="text-xs text-white/65">
+                      {status === "running"
+                        ? currentLog || "正在生成对战记录…"
+                        : status === "done"
+                        ? resultSubtitle
+                        : "准备好测试今天的运气了吗？"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 按钮 */}
+                <div className="w-full mt-2">
+                  <button
+                    onClick={handleStart}
+                    disabled={status === "running"}
+                    className={`
+                      w-full py-3.5 rounded-full text-sm font-medium tracking-wide
+                      border border-white/10 bg-white/5
+                      text-white/90 backdrop-blur-2xl
+                      shadow-[0_0_26px_rgba(99,102,241,0.18)]
+                      flex items-center justify-center gap-2
+                      transition-all duration-200 active:scale-[0.99]
+                      ${status === "running" ? "opacity-60 cursor-default" : "hover:bg-white/10"}
+                    `}
+                  >
+                    {status === "running" ? (
+                      <>
+                        <span className="w-3 h-3 rounded-full bg-white/80 animate-ping" />
+                        <span>测试中…</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{status === "done" ? "再测一次" : "开始测试"}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* 下半部分：近 30 天运气曲线 */}
+              <div
+                className="
+                  flex-none h-[38%]
+                  rounded-3xl bg-white/5 border border-white/10
+                  backdrop-blur-2xl px-4 pt-4 pb-4
+                  flex flex-col
+                "
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-xs text-white/60">近30天运气趋势</div>
+                  <div className="text-xs text-white/40">
+                    平均{" "}
+                    {Math.round(
+                      chartData.reduce((acc, d) => acc + d.value, 0) /
+                        chartData.length
+                    )}
+                    %
+                  </div>
+                </div>
+
+                <div className="flex-1">
+                  <motion.div
+                    key={chartKey}
+                    initial={{ opacity: 0, x: -24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    className="w-full h-full"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={chartData}
+                        margin={{ top: 6, bottom: 0, left: 0, right: 0 }}
+                      >
+                        <defs>
+                          <linearGradient
+                            id="luckGradient"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor="#a855f7"
+                              stopOpacity={0.45}
+                            />
+                            <stop
+                              offset="35%"
+                              stopColor="#38bdf8"
+                              stopOpacity={0.35}
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="#000000"
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </defs>
+
+                        <XAxis dataKey="day" hide={true} />
+                        <YAxis hide={true} domain={[0, 100]} />
+
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          stroke="rgba(168,85,247,0.95)"
+                          strokeWidth={2}
+                          fill="url(#luckGradient)"
+                          isAnimationActive={true}
+                          animationDuration={650}
+                          dot={false}
+                          activeDot={false}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </motion.div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
